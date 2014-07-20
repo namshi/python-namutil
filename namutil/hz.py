@@ -185,7 +185,7 @@ def as_json():
             status = 200
             if isinstance(ret, tuple):
                 status, ret = ret
-            if isinstance(ret, dict):
+            if isinstance(ret, dict) or isinstance(ret, list):
                 return Response(json.dumps(ret, default=json_default), status=status, mimetype='application/json')
             else:
                 return ret
