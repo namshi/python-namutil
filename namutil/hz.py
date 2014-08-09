@@ -367,4 +367,14 @@ def get_google_service(credentials_file, *args):
 
     return discovery.build(*args, http=http)
 
+import contextlib
+@contextlib.contextmanager
+def chdir(dirname=None):
+    import os
+    curdir = os.getcwd()
+    try:
+        if dirname is not None:  os.chdir(dirname)
+        yield
+    finally:
+        os.chdir(curdir)
 
