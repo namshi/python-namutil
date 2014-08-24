@@ -118,7 +118,7 @@ def get_results_as_dict(engine, query, dict=dict, **kwargs):
     from sqlalchemy.sql import text
     if isinstance(engine, basestring):
         engine = get_engine(engine)
-    is_session = 'session' in repr(engine.__class__)
+    is_session = 'session' in repr(engine.__class__).lower()
 
     def helper():
         q = text(query.format(**kwargs))
