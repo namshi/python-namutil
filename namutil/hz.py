@@ -394,4 +394,11 @@ def groupby(data, keyfn):
     import itertools
     return itertools.groupby(sorted(data, key=keyfn), keyfn)
 
+def decode_base64(data):
+    import base64
+    data = str(data).strip()
+    missing_padding = 4 - len(data) % 4
+    if missing_padding:
+        data += b'='* missing_padding
+    return base64.decodestring(data)
 
