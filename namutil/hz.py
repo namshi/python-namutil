@@ -114,6 +114,13 @@ def format_sql_list_param(strs):
         assert "'" not in s, "{} has ' in it".format(s)
     return "('{}')".format("', '".join(strs))
 
+def get_resultproxy_as_dict(result, dict=dict):
+    def helper():
+        keys = result.keys()
+        for r in result:
+            yield dict((k, v) for k, v in zip(keys, r))
+    return list(helper())
+
 def get_results_as_dict(engine, query, dict=dict, **kwargs):
     from sqlalchemy.sql import text
     if isinstance(engine, basestring):
@@ -173,9 +180,9 @@ def json_default(o):
         return float(o)
     return o
 
-def as_json():
+def as_json(support_jsonp=False):
     from functools import wraps
-    from flask import Response
+    from flask import request, Response
     import json
 
     def decorator(fn):
@@ -186,7 +193,11 @@ def as_json():
             if isinstance(ret, tuple):
                 status, ret = ret
             if isinstance(ret, dict) or isinstance(ret, list):
-                return Response(json.dumps(ret, default=json_default), status=status, mimetype='application/json')
+                content = json.dumps(ret, default=json_default)
+                callback = request.args.get('callback', False)
+                if support_jsonp and callback:
+                    content = "{callback}({content})".format(callback=callback, content=content)
+                return Response(content, status=status, mimetype='application/json')
             else:
                 return ret
         return inner
