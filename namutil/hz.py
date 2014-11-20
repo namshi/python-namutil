@@ -413,3 +413,16 @@ def decode_base64(data):
         data += b'='* missing_padding
     return base64.decodestring(data)
 
+def requires_basicauth(auth_map):
+    from functools import wraps
+    from flask import request, Response
+    def fn(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            auth = request.authorization
+            if not auth or auth_map.get(auth.username) != auth.password:
+                return Response('Login Required', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
+            return f(*args, **kwargs)
+        return decorated
+    return fn
+
