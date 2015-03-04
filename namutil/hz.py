@@ -1,3 +1,4 @@
+from __future__ import print_function 
 
 def get_handler(level='INFO'):
     import logging
@@ -37,7 +38,7 @@ def get_beater(group, process, key, sleep="10m", logger=None):
             if logger:
                 logger.warn("Heartbeat failed! %s" % str(e))
             else:
-                print "Heartbeat failed! %s" % str(e)
+                print("Heartbeat failed! %s" % str(e))
     return beat
 
 sns_conn = None
@@ -340,12 +341,12 @@ def retry(ExceptionToCheck, tries=4, delay=3, backoff=2, logger=None):
             while mtries > 1:
                 try:
                     return f(*args, **kwargs)
-                except ExceptionToCheck, e:
+                except ExceptionToCheck as e:
                     msg = "%s, Retrying in %d seconds..." % (str(e), mdelay)
                     if logger:
                         logger.warning(msg)
                     else:
-                        print msg
+                        print(msg)
                     time.sleep(mdelay)
                     mtries -= 1
                     mdelay *= backoff
