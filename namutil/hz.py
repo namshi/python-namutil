@@ -33,7 +33,7 @@ def get_beater(group, process, key, sleep="10m", logger=None):
         try:
             ret = requests.get("https://ht-beat.appspot.com/v1/heartbeat/{group}/{process}/?sleep={sleep}&key={key}".format(group=group, process=process, key=key, sleep=sleep))
             assert ret.status_code == 200, "Status code %s" % ret.status_code
-        except Exception, e:
+        except Exception as e:
             if logger:
                 logger.warn("Heartbeat failed! %s" % str(e))
             else:
