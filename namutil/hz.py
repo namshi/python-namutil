@@ -122,6 +122,15 @@ def get_resultproxy_as_dict(result, dict=dict):
             yield dict((k, v) for k, v in zip(keys, r))
     return list(helper())
 
+def execute_sql(engine, query, **kwargs):
+    from sqlalchemy.sql import text
+    if isinstance(engine, basestring):
+        engine = get_engine(engine)
+    is_session = 'session' in repr(engine.__class__).lower()
+
+    q = text(query.format(**kwargs))
+    return engine.execute(q, params=kwargs) if is_session else engine.execute(q, **kwargs)
+
 def get_results_as_dict(engine, query, dict=dict, **kwargs):
     from sqlalchemy.sql import text
     if isinstance(engine, basestring):
