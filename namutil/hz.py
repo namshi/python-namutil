@@ -1,4 +1,4 @@
-from __future__ import print_function 
+from __future__ import print_function
 
 def get_handler(level='INFO'):
     import logging
@@ -122,11 +122,25 @@ def get_resultproxy_as_dict(result, dict=dict):
             yield dict((k, v) for k, v in zip(keys, r))
     return list(helper())
 
+def format_query_with_list_params(query, params):
+    import re
+    keys = set(re.findall("(?P<key>:[a-zA-Z_]+_list)", query))
+    for key in keys:
+        values = params.pop(key[1:])
+        new_keys = []
+        for i, value in enumerate(values):
+            new_key = '{}_{}'.format(key, i)
+            new_keys.append(new_key)
+            params[new_key[1:]] = value
+        query = query.replace(key, "({})".format(", ".join(new_keys)))
+    return query, params
+
 def execute_sql(engine, query, **kwargs):
     from sqlalchemy.sql import text
     if isinstance(engine, basestring):
         engine = get_engine(engine)
     is_session = 'session' in repr(engine.__class__).lower()
+    query, kwargs = format_query_with_list_params(query, kwargs)
 
     q = text(query.format(**kwargs))
     return engine.execute(q, params=kwargs) if is_session else engine.execute(q, **kwargs)
@@ -136,6 +150,7 @@ def get_results_as_dict(engine, query, dict=dict, **kwargs):
     if isinstance(engine, basestring):
         engine = get_engine(engine)
     is_session = 'session' in repr(engine.__class__).lower()
+#    query, kwargs = format_query_with_list_params(query, kwargs)
 
     def helper():
         q = text(query.format(**kwargs))
