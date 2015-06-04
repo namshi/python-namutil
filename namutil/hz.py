@@ -145,20 +145,21 @@ def execute_sql(engine, query, **kwargs):
     q = text(query.format(**kwargs))
     return engine.execute(q, params=kwargs) if is_session else engine.execute(q, **kwargs)
 
-def get_results_as_dict(engine, query, dict=dict, **kwargs):
+def get_results_as_dict(*args, **kwargs):
+    return list(get_results_as_dict_iter(*args, **kwargs))
+
+def get_results_as_dict_iter(engine, query, dict=dict, **kwargs):
     from sqlalchemy.sql import text
     if isinstance(engine, basestring):
         engine = get_engine(engine)
     is_session = 'session' in repr(engine.__class__).lower()
 #    query, kwargs = format_query_with_list_params(query, kwargs)
 
-    def helper():
-        q = text(query.format(**kwargs))
-        result = engine.execute(q, params=kwargs) if is_session else engine.execute(q, **kwargs)
-        keys = result.keys()
-        for r in result:
-            yield dict((k, v) for k, v in zip(keys, r))
-    return list(helper())
+    q = text(query.format(**kwargs))
+    result = engine.execute(q, params=kwargs) if is_session else engine.execute(q, **kwargs)
+    keys = result.keys()
+    for r in result:
+        yield dict((k, v) for k, v in zip(keys, r))
 
 try:
     import redis
