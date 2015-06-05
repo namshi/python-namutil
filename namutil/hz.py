@@ -135,6 +135,17 @@ def format_query_with_list_params(query, params):
         query = query.replace(key, "({})".format(", ".join(new_keys)))
     return query, params
 
+def run_threads(threads, target):
+    import threading, time
+    def start_thread(i):
+        t = threading.Thread(target=target, args=[i])
+        t.daemon = True
+        t.start()
+        return t
+    [start_thread(i+1) for i in xrange(threads)]
+    while threading.active_count() > 1:
+        time.sleep(0.5)
+
 def execute_sql(engine, query, **kwargs):
     from sqlalchemy.sql import text
     if isinstance(engine, basestring):
