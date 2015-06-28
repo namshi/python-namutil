@@ -146,6 +146,70 @@ def run_threads(threads, target):
     while threading.active_count() > 1:
         time.sleep(0.5)
 
+def locked_iter(it):
+    import threading
+    it = iter(it)
+    lock = threading.Lock()
+    while 1:
+        try:
+            with lock:
+                value = next(it)
+        except StopIteration:
+            return
+        yield value
+
+def run_parallel_nice(num_threads, fn, iterable, logger=None):
+    import signal
+    callback = None if not logger else lambda: logger.info("Graceful interrupt")
+    iterable = locked_iter(iterable)
+    with GracefulInterruptHandler(sig=signal.SIGINT, exit=True, callback=callback) as h:
+        def thread(i):
+            while True:
+                if h.interrupted:
+                    if logger: logger.info("Thread {} exiting".format(i))
+                    return
+                try: key = next(iterable)
+                except StopIteration: return
+                fn(key)
+        if num_threads == 1:
+            thread(0)
+        else:
+            run_threads(num_threads, thread)
+
+class GracefulInterruptHandler(object):
+    def __init__(self, sig=None, callback=None, exit=False):
+        import signal
+        self.sig = sig or signal.SIGINT
+        self.callback = callback
+        self.exit = exit
+
+    def __enter__(self):
+        import signal
+        self.interrupted = False
+        self.released = False
+        self.original_handler = signal.getsignal(self.sig)
+        def handler(signum, frame):
+            self.release()
+            self.interrupted = True
+            if self.callback: self.callback()
+        signal.signal(self.sig, handler)
+        return self
+
+    def __exit__(self, type, value, tb):
+        self.release()
+        if self.exit:
+            import sys
+            sys.exit(0)
+
+    def release(self):
+        import signal
+        if self.released:
+            return False
+        signal.signal(self.sig, self.original_handler)
+        self.released = True
+        return True
+
+
 def execute_sql(engine, query, **kwargs):
     from sqlalchemy.sql import text
     if isinstance(engine, basestring):
