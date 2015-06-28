@@ -86,7 +86,7 @@ def read_google_doc(*args, **kwargs):
 
 class memoize(object):
    def __init__(self, cache=None, expiry_time=0, num_args=None):
-       self.cache = {} if cache is None else {}
+       self.cache = {} if cache is None else cache
        self.expiry_time = expiry_time
        self.num_args = num_args
 
