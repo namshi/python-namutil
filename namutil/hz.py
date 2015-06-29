@@ -85,10 +85,12 @@ def read_google_doc(*args, **kwargs):
     return [dictc((k, v) for k, v in zip(header, row.split("\t")) if (k and k[0] != '-')) for row in rows[1:]]
 
 class memoize(object):
-   def __init__(self, cache=None, expiry_time=0, num_args=None):
+   def __init__(self, cache=None, expiry_time=0, num_args=None, locked=False):
+       import threading
        self.cache = {} if cache is None else cache
        self.expiry_time = expiry_time
        self.num_args = num_args
+       self.lock = threading.Lock() if locked else None
 
    def __call__(self, func):
        import time
@@ -102,7 +104,10 @@ class memoize(object):
            result = func(*args)
            self.cache[mem_args] = (result, time.time())
            return result
-       return wrapped
+       def locked_wrapped(*args):
+           with self.lock:
+               return wrapped(*args)
+       return wrapped if self.lock is None else locked_wrapped
 
 @memoize()
 def get_engine(e):
