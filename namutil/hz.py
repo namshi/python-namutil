@@ -151,29 +151,31 @@ def run_threads(threads, target):
     while threading.active_count() > 1:
         time.sleep(0.5)
 
-def locked_iter(it):
-    import threading
-    it = iter(it)
-    lock = threading.Lock()
-    while 1:
-        try:
-            with lock:
-                value = next(it)
-        except StopIteration:
-            return
-        yield value
+
+class threadsafe_iter(object):
+    def __init__(self, it):
+        import threading
+        self.it = it
+        self.lock = threading.Lock()
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        with self.lock:
+            return self.it.next()
 
 def run_parallel_nice(num_threads, fn, iterable, logger=None):
     import signal
     callback = None if not logger else lambda: logger.info("Graceful interrupt")
-    iterable = locked_iter(iterable)
+    iterable = threadsafe_iter(iterable)
     with GracefulInterruptHandler(sig=signal.SIGINT, exit=True, callback=callback) as h:
         def thread(i):
             while True:
                 if h.interrupted:
                     if logger: logger.info("Thread {} exiting".format(i))
                     return
-                try: key = next(iterable)
+                try: key = iterable.next()
                 except StopIteration: return
                 fn(key)
         if num_threads == 1:
