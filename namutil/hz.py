@@ -534,3 +534,115 @@ def requires_basicauth(auth_map):
         return decorated
     return fn
 
+class JWTAuth(object):
+    def __init__(self, keyfile, **authconfig):
+        import jwt
+        self.verify = authconfig.pop('verify', True)
+        self.key = None if keyfile is None else jwt.rsa_load_pub(keyfile)
+        assert not (self.verify and self.key is None), 'must specify keyfile'
+        self.config = authconfig
+
+    def decode(self, request):
+        import jwt
+        try:
+            data = jwt.decode(self.get_cookie(request), self.key, verify=self.verify)
+            self.set_user(request, data)
+            return data
+        except Exception: return {}
+
+    def redirect(self, request):
+        import urllib
+        return self.get_redirect(request, "{}?next={}".format(self.config['auth_url'], urllib.quote(self.get_url(request), safe="")))
+
+    def should_redirect(self, request):
+        data = self.decode(request)
+        if not data:
+            return self.redirect(request)
+
+    @staticmethod
+    def check_user(user, **kwargs):
+        if not kwargs: return True
+        def check_kv(key, val):
+            if isinstance(val, basestring): val = set([val])
+            else: val = set(val)
+
+            userval = user.get(key, [])
+            if isinstance(userval, basestring): userval = set([userval])
+            else: userval = set(userval)
+
+            return len(val & userval) > 0
+        return any(check_kv(k, v) for k, v in kwargs.items())
+
+    def required(self, *check_fns, **check_args):
+        check_fns = list(check_fns)
+        if check_args:
+            check_fns.append(lambda user: self.check_user(user, **check_args))
+        def decorator(fn):
+            import functools
+            @functools.wraps(fn)
+            def wrapper(*args, **kwargs):
+                request = self.get_request(args, kwargs)
+                user = self.decode(request)
+                if not user:
+                    return self.redirect(request)
+                if not all(check_fn(user) for check_fn in check_fns):
+                    return self.unauthorized(request)
+                return fn(*args, **kwargs)
+            return wrapper
+        return decorator
+
+class JWTAuthDjango(JWTAuth):
+    def get_request(self, args=[], kwargs={}):
+        return args[0]
+
+    def get_cookie(self, request):
+        return request.COOKIES.get(self.config['cookie_name'])
+
+    def get_url(self, request): return request.build_absolute_uri()
+
+    def get_redirect(self, request, url):
+        from django.shortcuts import redirect
+        return redirect(url)
+
+    def unauthorized(self, request):
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden("403 Unauthorized")
+
+    def set_user(self, request, data):
+        setattr(request, 'jwt_user', data)
+
+
+class JWTAuthFlask(JWTAuth):
+    def before_request(self):
+        from flask import request
+        self.set_user(request, self.decode(request))
+
+    def get_request(self, args=[], kwargs={}):
+        from flask import request
+        return request
+
+    def get_cookie(self, request):
+        return request.cookies.get(self.config['cookie_name'])
+
+    def get_url(self, request): return request.url
+
+    def get_redirect(self, request, url):
+        from flask import redirect
+        return redirect(url)
+
+    def unauthorized(self, request):
+        from flask import abort
+        return abort(403)
+
+    def set_user(self, request, data):
+        from flask import g
+        setattr(g, 'jwt_user', data)
+
+class JWTFakeAuthDjango(JWTAuthDjango):
+    def __init__(self, data):
+        self.data = data
+
+    def decode(self, request):
+        self.set_user(request, self.data)
+        return self.data
+
