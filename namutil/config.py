@@ -45,7 +45,7 @@ def import_string(import_name, silent=False):
             modname = module + '.' + obj
             __import__(modname)
             return sys.modules[modname]
-    except ImportError, e:
+    except ImportError:
         if not silent:
             raise
 
@@ -153,7 +153,7 @@ class Config(dict):
         d.__file__ = filename
         try:
             execfile(filename, d.__dict__)
-        except IOError, e:
+        except IOError as e:
             if silent and e.errno in (errno.ENOENT, errno.EISDIR):
                 return False
             e.strerror = 'Unable to load configuration file (%s)' % e.strerror
