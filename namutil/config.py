@@ -10,6 +10,11 @@ import os
 import sys
 import errno
 
+try:
+  basestring
+except NameError:
+  basestring = str
+
 def import_string(import_name, silent=False):
     """Imports an object based on a string.  This is useful if you want to
     use import paths as endpoints or something similar.  An import path can
@@ -152,7 +157,9 @@ class Config(dict):
         d = imp.new_module('config')
         d.__file__ = filename
         try:
-            execfile(filename, d.__dict__)
+            with open(filename) as f:
+                code = compile(f.read(), filename, 'exec')
+                exec(code, d.__dict__)
         except IOError as e:
             if silent and e.errno in (errno.ENOENT, errno.EISDIR):
                 return False
