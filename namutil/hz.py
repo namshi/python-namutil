@@ -1,5 +1,10 @@
 from __future__ import print_function
 
+try:
+    basestring
+except NameError:
+    basestring = str
+
 def get_handler(level='INFO'):
     import logging
     h = logging.StreamHandler()
@@ -235,7 +240,7 @@ def get_results_as_dict_iter(engine, query, dict=dict, **kwargs):
     if isinstance(engine, basestring):
         engine = get_engine(engine)
     is_session = 'session' in repr(engine.__class__).lower()
-#    query, kwargs = format_query_with_list_params(query, kwargs)
+    query, kwargs = format_query_with_list_params(query, kwargs)
 
     q = text(query.format(**kwargs))
     result = engine.execute(q, params=kwargs) if is_session else engine.execute(q, **kwargs)
