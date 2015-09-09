@@ -530,6 +530,8 @@ def requires_basicauth(auth_map):
     from functools import wraps
     from flask import request, Response
     def fn(f):
+        if len(auth_map) == 0:
+            return f
         @wraps(f)
         def decorated(*args, **kwargs):
             auth = request.authorization
