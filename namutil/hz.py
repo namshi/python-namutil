@@ -293,7 +293,7 @@ def json_default(o):
         return float(o)
     return o
 
-def as_json(support_jsonp=False):
+def as_json(support_jsonp=False, sort_keys=False):
     from functools import wraps
     from flask import request, Response
     import json
@@ -306,7 +306,7 @@ def as_json(support_jsonp=False):
             if isinstance(ret, tuple):
                 status, ret = ret
             if isinstance(ret, dict) or isinstance(ret, list):
-                content = json.dumps(ret, default=json_default)
+                content = json.dumps(ret, default=json_default, sort_keys=sort_keys)
                 callback = request.args.get('callback', False)
                 if support_jsonp and callback:
                     content = "{callback}({content})".format(callback=callback, content=content)
