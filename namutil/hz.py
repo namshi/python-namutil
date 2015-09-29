@@ -142,7 +142,7 @@ def format_query_with_list_params(query, params):
             new_key = '{}_{}'.format(key, i)
             new_keys.append(new_key)
             params[new_key[1:]] = value
-        query = query.replace(key, "({})".format(", ".join(new_keys)))
+        query = query.replace(key, "({})".format(", ".join(new_keys)) if new_keys else "(NULL)")
     return query, params
 
 def run_threads(threads, target):
