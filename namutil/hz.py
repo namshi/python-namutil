@@ -121,6 +121,7 @@ def get_engine(e):
 
 def format_sql_list_param(strs):
     strs = [str(s) for s in strs]
+    if len(strs) == 0: return "(null)"
     for s in strs:
         assert "'" not in s, "{} has ' in it".format(s)
     return "('{}')".format("', '".join(strs))
@@ -142,7 +143,8 @@ def format_query_with_list_params(query, params):
             new_key = '{}_{}'.format(key, i)
             new_keys.append(new_key)
             params[new_key[1:]] = value
-        query = query.replace(key, "({})".format(", ".join(new_keys)) if new_keys else "(NULL)")
+        new_keys_str = ", ".join(new_keys) or "null"
+        query = query.replace(key, "({})".format(new_keys_str))
     return query, params
 
 def run_threads(threads, target):
@@ -652,4 +654,16 @@ class JWTFakeAuthDjango(JWTAuthDjango):
     def decode(self, request):
         self.set_user(request, self.data)
         return self.data
+
+class CountingIterator(object):
+    def __init__(self, it):
+        self.it = it
+        self.count = 0
+    def __iter__(self):
+        return self
+    def next(self):
+        nxt = next(self.it)
+        self.count += 1
+        return nxt
+    __next__ = next
 
