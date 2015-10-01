@@ -172,10 +172,13 @@ class threadsafe_iter(object):
         with self.lock:
             return self.it.next()
 
-def run_parallel_nice(num_threads, fn, iterable, logger=None, exit=False):
-    import signal
+def run_parallel_nice(num_threads, fn, iterable, log=True, logger=None, exit=False):
+    import signal, logging
+    if log and not logger:
+        logger = logging.getLogger()
     callback = None if not logger else lambda: logger.info("Graceful interrupt")
     iterable = threadsafe_iter(iterable)
+    has_errors = [False]
     with GracefulInterruptHandler(sig=signal.SIGINT, exit=exit, callback=callback) as h:
         def thread(i):
             while True:
@@ -184,11 +187,15 @@ def run_parallel_nice(num_threads, fn, iterable, logger=None, exit=False):
                     return
                 try: key = iterable.next()
                 except StopIteration: return
-                fn(key)
+                try: fn(key)
+                except Exception:
+                    if logger: logger.warn("Error while processing {}".format(key), exc_info=1)
+                    has_errors[0] = True
         if num_threads == 1:
             thread(0)
         else:
             run_threads(num_threads, thread)
+        return has_errors[0]
 
 class GracefulInterruptHandler(object):
     def __init__(self, sig=None, callback=None, exit=False):
