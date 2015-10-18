@@ -674,3 +674,12 @@ class CountingIterator(object):
         return nxt
     __next__ = next
 
+class EnvironOverride(object):
+    def __init__(self, app, env):
+        self.app = app
+        self.env = {k: v for k, v in env.items() if v}
+
+    def __call__(self, environ, start_response):
+        environ.update(self.env)
+        return self.app(environ, start_response)
+        
