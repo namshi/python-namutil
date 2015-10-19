@@ -231,10 +231,10 @@ class GracefulInterruptHandler(object):
         return True
 
 
-def execute_sql(engine, query, **kwargs):
+def execute_sql(engine, query, engines={}, **kwargs):
     from sqlalchemy.sql import text
     if isinstance(engine, basestring):
-        engine = get_engine(engine)
+        engine = get_engine(engines.get(engine, engine))
     is_session = 'session' in repr(engine.__class__).lower()
     query, kwargs = format_query_with_list_params(query, kwargs)
 
@@ -244,10 +244,10 @@ def execute_sql(engine, query, **kwargs):
 def get_results_as_dict(*args, **kwargs):
     return list(get_results_as_dict_iter(*args, **kwargs))
 
-def get_results_as_dict_iter(engine, query, dict=dict, **kwargs):
+def get_results_as_dict_iter(engine, query, dict=dict, engines={}, **kwargs):
     from sqlalchemy.sql import text
     if isinstance(engine, basestring):
-        engine = get_engine(engine)
+        engine = get_engine(engines.get(engine, engine))
     is_session = 'session' in repr(engine.__class__).lower()
     query, kwargs = format_query_with_list_params(query, kwargs)
 
@@ -683,9 +683,9 @@ class EnvironOverride(object):
         environ.update(self.env)
         return self.app(environ, start_response)
 
-def insert_into(tables, engine, table_name, rows):
+def insert_into(engine, table, rows, tables={}):
     if not rows: return
-    table = tables[table_name]
+    if isinstance(table, basestring): table = tables[table]
     for row in rows:
         columns = list(set(table._columns.keys()) & set(row.keys()))
         query = text("INSERT INTO `{}` ({}) VALUES ({}) ON DUPLICATE KEY UPDATE {}".format(table_name, ", ".join(columns), ", ".join(":" + c for c
@@ -693,19 +693,19 @@ in columns), ", ".join("{}=VALUES({})".format(c, c) for c in columns)))
         engine.execute(query, row)
     return engine
 
-def insert_ignore_into(tables, engine, table_name, rows):
+def insert_ignore_into(engine, table, rows, tables={}):
     if not rows: return
-    table = tables[table_name]
+    if isinstance(table, basestring): table = tables[table]
     for row in rows:
         columns = list(set(table._columns.keys()) & set(row.keys()))
         query = text("INSERT IGNORE INTO `{}` ({}) VALUES ({})".format(table_name, ", ".join(columns), ", ".join(":" + c for c in columns)))
         engine.execute(query, row)
     return engine
 
-def insert_into_batch(tables, engine, table_name, rows, batch=500):
+def insert_into_batch(engine, table, rows, batch=500, tables={}):
     try: row = next(rows)
     except StopIteration: return 0
-    table = tables[table_name]
+    if isinstance(table, basestring): table = tables[table]
     columns = list(set(table._columns.keys()) & set(row.keys()))
     query = text("INSERT INTO `{}` ({}) VALUES ({}) ON DUPLICATE KEY UPDATE {}".format(table_name, ", ".join(columns), ", ".join(":" + c for c in columns), ", ".join("{}=VALUES({})".format(c, c) for c in columns)))
     engine.execute(query, row)
