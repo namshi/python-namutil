@@ -682,4 +682,34 @@ class EnvironOverride(object):
     def __call__(self, environ, start_response):
         environ.update(self.env)
         return self.app(environ, start_response)
-        
+
+def insert_into(tables, engine, table_name, rows):
+    if not rows: return
+    table = tables[table_name]
+    for row in rows:
+        columns = list(set(table._columns.keys()) & set(row.keys()))
+        query = text("INSERT INTO `{}` ({}) VALUES ({}) ON DUPLICATE KEY UPDATE {}".format(table_name, ", ".join(columns), ", ".join(":" + c for c
+in columns), ", ".join("{}=VALUES({})".format(c, c) for c in columns)))
+        engine.execute(query, row)
+    return engine
+
+def insert_ignore_into(tables, engine, table_name, rows):
+    if not rows: return
+    table = tables[table_name]
+    for row in rows:
+        columns = list(set(table._columns.keys()) & set(row.keys()))
+        query = text("INSERT IGNORE INTO `{}` ({}) VALUES ({})".format(table_name, ", ".join(columns), ", ".join(":" + c for c in columns)))
+        engine.execute(query, row)
+    return engine
+
+def insert_into_batch(tables, engine, table_name, rows, batch=500):
+    try: row = next(rows)
+    except StopIteration: return 0
+    table = tables[table_name]
+    columns = list(set(table._columns.keys()) & set(row.keys()))
+    query = text("INSERT INTO `{}` ({}) VALUES ({}) ON DUPLICATE KEY UPDATE {}".format(table_name, ", ".join(columns), ", ".join(":" + c for c in columns), ", ".join("{}=VALUES({})".format(c, c) for c in columns)))
+    engine.execute(query, row)
+    for group in grouper(batch, rows):
+        engine.execute(query, group)
+    return engine
+
