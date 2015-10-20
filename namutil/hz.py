@@ -689,7 +689,7 @@ def insert_into(engine, table, rows, tables={}):
     if isinstance(table, basestring): table = tables[table]
     for row in rows:
         columns = list(set(table._columns.keys()) & set(row.keys()))
-        query = text("INSERT INTO `{}` ({}) VALUES ({}) ON DUPLICATE KEY UPDATE {}".format(table_name, ", ".join(columns), ", ".join(":" + c for c
+        query = text("INSERT INTO `{}` ({}) VALUES ({}) ON DUPLICATE KEY UPDATE {}".format(table.name, ", ".join(columns), ", ".join(":" + c for c
 in columns), ", ".join("{}=VALUES({})".format(c, c) for c in columns)))
         engine.execute(query, row)
     return engine
@@ -700,7 +700,7 @@ def insert_ignore_into(engine, table, rows, tables={}):
     if isinstance(table, basestring): table = tables[table]
     for row in rows:
         columns = list(set(table._columns.keys()) & set(row.keys()))
-        query = text("INSERT IGNORE INTO `{}` ({}) VALUES ({})".format(table_name, ", ".join(columns), ", ".join(":" + c for c in columns)))
+        query = text("INSERT IGNORE INTO `{}` ({}) VALUES ({})".format(table.name, ", ".join(columns), ", ".join(":" + c for c in columns)))
         engine.execute(query, row)
     return engine
 
@@ -710,7 +710,7 @@ def insert_into_batch(engine, table, rows, batch=500, tables={}):
     except StopIteration: return 0
     if isinstance(table, basestring): table = tables[table]
     columns = list(set(table._columns.keys()) & set(row.keys()))
-    query = text("INSERT INTO `{}` ({}) VALUES ({}) ON DUPLICATE KEY UPDATE {}".format(table_name, ", ".join(columns), ", ".join(":" + c for c in columns), ", ".join("{}=VALUES({})".format(c, c) for c in columns)))
+    query = text("INSERT INTO `{}` ({}) VALUES ({}) ON DUPLICATE KEY UPDATE {}".format(table.name, ", ".join(columns), ", ".join(":" + c for c in columns), ", ".join("{}=VALUES({})".format(c, c) for c in columns)))
     engine.execute(query, row)
     for group in grouper(batch, rows):
         engine.execute(query, group)
