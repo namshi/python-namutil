@@ -684,6 +684,7 @@ class EnvironOverride(object):
         return self.app(environ, start_response)
 
 def insert_into(engine, table, rows, tables={}):
+    from sqlalchemy import text
     if not rows: return
     if isinstance(table, basestring): table = tables[table]
     for row in rows:
@@ -694,6 +695,7 @@ in columns), ", ".join("{}=VALUES({})".format(c, c) for c in columns)))
     return engine
 
 def insert_ignore_into(engine, table, rows, tables={}):
+    from sqlalchemy import text
     if not rows: return
     if isinstance(table, basestring): table = tables[table]
     for row in rows:
@@ -703,6 +705,7 @@ def insert_ignore_into(engine, table, rows, tables={}):
     return engine
 
 def insert_into_batch(engine, table, rows, batch=500, tables={}):
+    from sqlalchemy import text
     try: row = next(rows)
     except StopIteration: return 0
     if isinstance(table, basestring): table = tables[table]
