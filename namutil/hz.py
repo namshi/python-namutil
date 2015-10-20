@@ -683,10 +683,12 @@ class EnvironOverride(object):
         environ.update(self.env)
         return self.app(environ, start_response)
 
-def insert_into(engine, table, rows, tables={}):
+def insert_into(engine, table, rows, engines={}, tables={}):
     from sqlalchemy import text
     if not rows: return
     if isinstance(table, basestring): table = tables[table]
+    if isinstance(engine, basestring):
+        engine = get_engine(engines.get(engine, engine))
     for row in rows:
         columns = list(set(table._columns.keys()) & set(row.keys()))
         query = text("INSERT INTO `{}` ({}) VALUES ({}) ON DUPLICATE KEY UPDATE {}".format(table.name, ", ".join(columns), ", ".join(":" + c for c
@@ -694,21 +696,25 @@ in columns), ", ".join("{}=VALUES({})".format(c, c) for c in columns)))
         engine.execute(query, row)
     return engine
 
-def insert_ignore_into(engine, table, rows, tables={}):
+def insert_ignore_into(engine, table, rows, engines={}, tables={}):
     from sqlalchemy import text
     if not rows: return
     if isinstance(table, basestring): table = tables[table]
+    if isinstance(engine, basestring):
+        engine = get_engine(engines.get(engine, engine))
     for row in rows:
         columns = list(set(table._columns.keys()) & set(row.keys()))
         query = text("INSERT IGNORE INTO `{}` ({}) VALUES ({})".format(table.name, ", ".join(columns), ", ".join(":" + c for c in columns)))
         engine.execute(query, row)
     return engine
 
-def insert_into_batch(engine, table, rows, batch=500, tables={}):
+def insert_into_batch(engine, table, rows, batch=500, engines={}, tables={}):
     from sqlalchemy import text
     try: row = next(rows)
     except StopIteration: return 0
     if isinstance(table, basestring): table = tables[table]
+    if isinstance(engine, basestring):
+        engine = get_engine(engines.get(engine, engine))
     columns = list(set(table._columns.keys()) & set(row.keys()))
     query = text("INSERT INTO `{}` ({}) VALUES ({}) ON DUPLICATE KEY UPDATE {}".format(table.name, ", ".join(columns), ", ".join(":" + c for c in columns), ", ".join("{}=VALUES({})".format(c, c) for c in columns)))
     engine.execute(query, row)
