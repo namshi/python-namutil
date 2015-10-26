@@ -683,7 +683,7 @@ class EnvironOverride(object):
         environ.update(self.env)
         return self.app(environ, start_response)
 
-def ProxyFix(flask_app):
+def NamProxyFix(flask_app):
     if 'PROXY_FIX' in flask_app.config:
         flask_app.wsgi_app = EnvironOverride(flask_app.wsgi_app, flask_app.config['PROXY_FIX'])
     return flask_app
