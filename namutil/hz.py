@@ -683,6 +683,11 @@ class EnvironOverride(object):
         environ.update(self.env)
         return self.app(environ, start_response)
 
+def ProxyFix(flask_app):
+    if 'PROXY_FIX' in flask_app.config:
+        flask_app.wsgi_app = EnvironOverride(flask_app.wsgi_app, flask_app.config['PROXY_FIX'])
+    return flask_app
+
 def insert_into(engine, table, rows, engines={}, tables={}):
     from sqlalchemy import text
     if not rows: return
