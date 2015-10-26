@@ -133,18 +133,41 @@ def get_resultproxy_as_dict(result, dict=dict):
             yield dict((k, v) for k, v in zip(keys, r))
     return list(helper())
 
+def _format_query_list_key(key, query, params):
+    values = params.pop(key[1:])
+    new_keys = []
+    for i, value in enumerate(values):
+        new_key = '{}_{}'.format(key, i)
+        new_keys.append(new_key)
+        params[new_key[1:]] = value
+    new_keys_str = ", ".join(new_keys) or "null"
+    query = query.replace(key, "({})".format(new_keys_str))
+    return query, params
+
+def _format_query_tuple_list_key(key, query, params):
+    values = params.pop(key[1:])
+    new_keys = []
+    for i, value in enumerate(values):
+        new_key = '{}_{}'.format(key, i)
+        assert isinstance(value, tuple)
+        new_keys2 = []
+        for i, tuple_val in enumerate(value):
+            new_key2 = '{}_{}'.format(new_key, i)
+            new_keys2.append(new_key2)
+            params[new_key2[1:]] = tuple_val
+        new_keys.append("({})".format(", ".join(new_keys2)))
+    new_keys_str = ", ".join(new_keys) or "null"
+    query = query.replace(key, "({})".format(new_keys_str))
+    return query, params
+
 def format_query_with_list_params(query, params):
     import re
     keys = set(re.findall("(?P<key>:[a-zA-Z_]+_list)", query))
     for key in keys:
-        values = params.pop(key[1:])
-        new_keys = []
-        for i, value in enumerate(values):
-            new_key = '{}_{}'.format(key, i)
-            new_keys.append(new_key)
-            params[new_key[1:]] = value
-        new_keys_str = ", ".join(new_keys) or "null"
-        query = query.replace(key, "({})".format(new_keys_str))
+        if key.endswith('_tuple_list'):
+            query, params = _format_query_tuple_list_key(key, query, params)
+        else:
+            query, params = _format_query_list_key(key, query, params)
     return query, params
 
 def run_threads(threads, target):
