@@ -117,7 +117,7 @@ class memoize(object):
 @memoize()
 def get_engine(e):
     from sqlalchemy import create_engine
-    return create_engine(e)
+    return create_engine(e, pool_recycle=60)
 
 def format_sql_list_param(strs):
     strs = [str(s) for s in strs]
