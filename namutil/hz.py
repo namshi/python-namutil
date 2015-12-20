@@ -87,8 +87,8 @@ def read_google_doc(*args, **kwargs):
     rows = resp.read().decode('utf8').splitlines()
     header = rows[0].split("\t")
     dictc = kwargs.get('dict', dict)
-    sanitize_value = (lambda v: v.strip()) if kwargs.get('strip') else (lambda v: v)
-    return [dictc((k, sanitize_value(v)) for k, v in zip(header, row.split("\t")) if (k and k[0] != '-')) for row in rows[1:]]
+    sanitize = (lambda v: v.strip()) if kwargs.get('strip', True) else (lambda v: v)
+    return [dictc((sanitize(k), sanitize(v)) for k, v in zip(header, row.split("\t")) if (k and k[0] != '-')) for row in rows[1:]]
 
 class memoize(object):
    def __init__(self, cache=None, expiry_time=0, num_args=None, locked=False):
