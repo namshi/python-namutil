@@ -12,11 +12,11 @@ def get_handler(level='INFO'):
     h.setFormatter(logging.Formatter('%(asctime)-15s %(levelname)s %(message)s'))
     return h
 
-def get_logger(facility, level='INFO'):
+def get_logger(facility, level='INFO', format='%(asctime)-15s %(levelname)s %(message)s'):
     import logging
     logging.basicConfig(
-        format='%(asctime)-15s %(levelname)s %(message)s',
-        level = level
+        format=format,
+        level=level
     )
     return logging.getLogger(facility)
 
@@ -87,7 +87,8 @@ def read_google_doc(*args, **kwargs):
     rows = resp.read().decode('utf8').splitlines()
     header = rows[0].split("\t")
     dictc = kwargs.get('dict', dict)
-    return [dictc((k, v) for k, v in zip(header, row.split("\t")) if (k and k[0] != '-')) for row in rows[1:]]
+    sanitize_value = (lambda v: v.strip()) if kwargs.get('strip') else (lambda v: v)
+    return [dictc((k, sanitize_value(v)) for k, v in zip(header, row.split("\t")) if (k and k[0] != '-')) for row in rows[1:]]
 
 class memoize(object):
    def __init__(self, cache=None, expiry_time=0, num_args=None, locked=False):
