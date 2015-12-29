@@ -526,7 +526,7 @@ def get_google_service(credentials_file, *args):
 
 import contextlib
 @contextlib.contextmanager
-def chdir(dirname=None):
+def chdir(dirname=None, delete_after=False):
     import os
     curdir = os.getcwd()
     try:
@@ -534,6 +534,9 @@ def chdir(dirname=None):
         yield
     finally:
         os.chdir(curdir)
+        if dirname and delete_after:
+            import shutil
+            shutil.rmtree(dirname)
 
 def md5_for_file(f, block_size=2**20):
     import hashlib
