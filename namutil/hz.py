@@ -12,14 +12,17 @@ def get_handler(level='INFO'):
     h.setFormatter(logging.Formatter('%(asctime)-15s %(levelname)s %(message)s'))
     return h
 
-def get_logger(facility, level='INFO', format='%(asctime)-15s %(levelname)s %(message)s'):
+def get_logger(facility, **kwargs):
+    import logging
+    configure_logging(**kwargs)
+    return logging.getLogger(facility)
+
+def configure_logging(level='INFO', format='%(asctime)-15s %(levelname)s %(message)s'):
     import logging
     logging.basicConfig(
         format=format,
         level=level
     )
-    return logging.getLogger(facility)
-
 
 def get_graylogger(host, facility, level='INFO', port=12201, **kwargs):
     import logging, graypy
