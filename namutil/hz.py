@@ -512,20 +512,20 @@ def grouper(n, iterable):
        if not chunk: return
        yield chunk
 
-def get_google_service(credentials_file, *args):
-    from apiclient import discovery
-    from oauth2client import file
-    import httplib2
 
-    storage = file.Storage(credentials_file)
-    credentials = storage.get()
-    if credentials is None or credentials.invalid:
-        raise ValueError("Google service credentials invalid!")
+def get_google_credentials(scopes, **kwargs):
+    from oauth2client.client import GoogleCredentials
+    credentials = GoogleCredentials.get_application_default()
+    credentials._kwargs = kwargs
+    return credentials.create_scoped(scopes)
 
-    http = httplib2.Http()
+
+def get_google_service(scopes, *args):
+    credentials = get_google_credentials(scopes)
+
+    import httplib2; from apiclient.discovery import build; http = httplib2.Http()
     http = credentials.authorize(http)
-
-    return discovery.build(*args, http=http)
+    return build(*args, http=http)
 
 import contextlib
 @contextlib.contextmanager
@@ -763,7 +763,7 @@ def get_days_ago(days=1):
 
 def date_range(start_date=None, end_date=None):
     import datetime
-    
+
     start_date = start_date or get_days_ago()
     if '-' in start_date:
         start_date, end_date = start_date.split('-', 1)
