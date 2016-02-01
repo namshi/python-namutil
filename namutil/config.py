@@ -117,7 +117,7 @@ class Config(dict):
     def __init__(self, defaults=None):
         dict.__init__(self, defaults or {})
 
-    def from_envvar(self, variable_name, silent=False):
+    def from_envvar(self, variable_name, default=None, silent=False):
         """Loads a configuration from an environment variable pointing to
         a configuration file.  This is basically just a shortcut with nicer
         error messages for this line of code::
@@ -129,7 +129,7 @@ class Config(dict):
                        files.
         :return: bool. `True` if able to load config, `False` otherwise.
         """
-        rv = os.environ.get(variable_name)
+        rv = os.environ.get(variable_name, default)
         if not rv:
             if silent:
                 return False
