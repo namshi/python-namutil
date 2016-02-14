@@ -5,6 +5,12 @@ try:
 except NameError:
     basestring = str
 
+try:
+    range = xrange
+except NameError:
+    pass
+
+
 def get_handler(level='INFO'):
     import logging
     h = logging.StreamHandler()
@@ -181,7 +187,7 @@ def run_threads(threads, target):
         t.daemon = True
         t.start()
         return t
-    [start_thread(i+1) for i in xrange(threads)]
+    [start_thread(i+1) for i in range(threads)]
     while threading.active_count() > 1:
         time.sleep(0.5)
 
@@ -195,16 +201,18 @@ class threadsafe_iter(object):
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         with self.lock:
-            return self.it.next()
+            return next(self.it)
+
+    next = __next__
 
 def run_parallel_nice(num_threads, fn, iterable, log=True, logger=None, exit=False):
     import signal, logging
     if log and not logger:
         logger = logging.getLogger()
     callback = None if not logger else lambda: logger.info("Graceful interrupt")
-    iterable = threadsafe_iter(iterable)
+    iterable = threadsafe_iter(iter(iterable))
     has_errors = [False]
     with GracefulInterruptHandler(sig=signal.SIGINT, exit=exit, callback=callback) as h:
         def thread(i):
@@ -212,7 +220,7 @@ def run_parallel_nice(num_threads, fn, iterable, log=True, logger=None, exit=Fal
                 if h.interrupted:
                     if logger: logger.info("Thread {} exiting".format(i))
                     return
-                try: key = iterable.next()
+                try: key = next(iterable)
                 except StopIteration: return
                 try: fn(key)
                 except Exception:
@@ -778,11 +786,11 @@ def date_range(start_date=None, end_date=None):
 class TimeoutException(Exception): pass
 
 @contextlib.contextmanager
-def signal_timeout(seconds):
+def signal_timeout(seconds, exception=TimeoutException):
     # http://stackoverflow.com/a/601168
     import signal
     def signal_handler(signum, frame):
-        raise TimeoutException("Timed out!")
+        raise exception("Timed out!")
     signal.signal(signal.SIGALRM, signal_handler)
     signal.alarm(seconds)
     try:
