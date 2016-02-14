@@ -775,4 +775,18 @@ def date_range(start_date=None, end_date=None):
     for n in range(int((end_date - start_date).days) + 1):
         yield (start_date + datetime.timedelta(days=n)).strftime("%Y%m%d")
 
+class TimeoutException(Exception): pass
+
+@contextlib.contextmanager
+def signal_timeout(seconds):
+    # http://stackoverflow.com/a/601168
+    import signal
+    def signal_handler(signum, frame):
+        raise TimeoutException("Timed out!")
+    signal.signal(signal.SIGALRM, signal_handler)
+    signal.alarm(seconds)
+    try:
+        yield
+    finally:
+        signal.alarm(0)
 
