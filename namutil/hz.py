@@ -790,7 +790,7 @@ def signal_timeout(seconds, exception=TimeoutException):
     # http://stackoverflow.com/a/601168
     import signal
     def signal_handler(signum, frame):
-        raise exception("Timed out!")
+        raise exception()
     signal.signal(signal.SIGALRM, signal_handler)
     signal.alarm(seconds)
     try:
