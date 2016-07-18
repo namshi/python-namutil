@@ -100,7 +100,8 @@ def read_google_doc(*args, **kwargs):
     rows = list(grouper(len(header), rows))    
     dictc = kwargs.get('dict', dict)
     sanitize = (lambda v: v.strip().replace("\r\n", "\n").replace("\r", "\n")) if kwargs.get('strip', True) else (lambda v: v.replace("\r\n", "\n").replace("\r", "\n"))
-    return [dictc((sanitize(k), sanitize(v)) for k, v in zip(header, row) if (k and k[0] != '-')) for row in rows]
+    is_valid_key = lambda k: bool(k and k.strip() and k[0] != '-')
+    return [dictc((sanitize(k), sanitize(v)) for k, v in zip(header, row) if is_valid_key(k)) for row in rows]
 
 class memoize(object):
    def __init__(self, cache=None, expiry_time=0, num_args=None, locked=False):
