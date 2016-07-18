@@ -93,11 +93,14 @@ def read_google_doc(*args, **kwargs):
     export_url = get_google_doc_export_url(*args)
     resp = urllib2.urlopen(export_url)
     assert resp.headers['content-type'] == 'text/tab-separated-values', "bad content type '{}'; ensure that sheet is published: {}".format(resp.headers['content-type'], repr(args))
-    rows = resp.read().decode('utf8').splitlines()
-    header = rows[0].split("\t")
+    data = resp.read().decode('utf8')
+    header, rows = data.split("\n", 1)
+    header = header.split("\t")
+    rows = rows.replace("\n", "\t").split("\t")
+    rows = list(grouper(len(header), rows))    
     dictc = kwargs.get('dict', dict)
-    sanitize = (lambda v: v.strip()) if kwargs.get('strip', True) else (lambda v: v)
-    return [dictc((sanitize(k), sanitize(v)) for k, v in zip(header, row.split("\t")) if (k and k[0] != '-')) for row in rows[1:]]
+    sanitize = (lambda v: v.strip().replace("\r\n", "\n").replace("\r", "\n")) if kwargs.get('strip', True) else (lambda v: v.replace("\r\n", "\n").replace("\r", "\n"))
+    return [dictc((sanitize(k), sanitize(v)) for k, v in zip(header, row) if (k and k[0] != '-')) for row in rows]
 
 class memoize(object):
    def __init__(self, cache=None, expiry_time=0, num_args=None, locked=False):
