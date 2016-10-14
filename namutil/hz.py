@@ -89,15 +89,16 @@ def read_google_docs(docs):
             yield row
 
 def read_google_doc(*args, **kwargs):
-    import urllib2
+    try: from urllib import request
+    except ImportError: import urllib2 as request
     export_url = get_google_doc_export_url(*args)
-    resp = urllib2.urlopen(export_url)
+    resp = request.urlopen(export_url)
     assert resp.headers['content-type'] == 'text/tab-separated-values', "bad content type '{}'; ensure that sheet is published: {}".format(resp.headers['content-type'], repr(args))
     data = resp.read().decode('utf8')
     header, rows = data.split("\n", 1)
     header = header.split("\t")
     rows = rows.replace("\n", "\t").split("\t")
-    rows = list(grouper(len(header), rows))    
+    rows = list(grouper(len(header), rows))
     dictc = kwargs.get('dict', dict)
     sanitize = (lambda v: v.strip().replace("\r\n", "\n").replace("\r", "\n")) if kwargs.get('strip', True) else (lambda v: v.replace("\r\n", "\n").replace("\r", "\n"))
     is_valid_key = lambda k: bool(k and k.strip() and k[0] != '-')
