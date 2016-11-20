@@ -788,6 +788,14 @@ def date_range(start_date=None, end_date=None):
     for n in range(int((end_date - start_date).days) + 1):
         yield (start_date + datetime.timedelta(days=n)).strftime("%Y%m%d")
 
+def month_range(*args, **kwargs):
+    from collections import OrderedDict
+    ret = OrderedDict()
+    dates = list(date_range(*args, **kwargs))
+    for date in dates:
+        ret[date[:6]] = True
+    return ret.keys()
+
 class TimeoutException(Exception): pass
 
 @contextlib.contextmanager
