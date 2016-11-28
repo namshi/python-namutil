@@ -782,8 +782,8 @@ def date_range(start_date=None, end_date=None):
         start_date, end_date = start_date.split('-', 1)
     end_date = end_date or start_date
 
-    start_date = (start_date+'01')[:6]
-    end_date = (end_date+'01')[:6]
+    start_date = (start_date+'01')[:8]
+    end_date = (end_date+'01')[:8]
 
     start_date = datetime.datetime.strptime(start_date, "%Y%m%d")
     end_date = datetime.datetime.strptime(end_date, "%Y%m%d")
