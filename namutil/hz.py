@@ -731,6 +731,11 @@ def NamProxyFix(flask_app):
         flask_app.wsgi_app = EnvironOverride(flask_app.wsgi_app, flask_app.config['PROXY_FIX'])
     return flask_app
 
+class FakeTable(object):
+    def __init__(self, name, columns):
+        self.name = name
+        self._columns = {c: None for c in columns}
+
 def insert_into(engine, table, rows, engines={}, tables={}):
     from sqlalchemy import text
     if not rows: return
