@@ -538,7 +538,7 @@ def get_google_service(scopes, *args):
 
     import httplib2; from apiclient.discovery import build; http = httplib2.Http()
     http = credentials.authorize(http)
-    return build(*args, http=http)
+    return build(*args, http=http, cache_discovery=False)
 
 import contextlib
 @contextlib.contextmanager
