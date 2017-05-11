@@ -332,6 +332,15 @@ try:
                     p.hget(hkey, key)
                 return p.execute()
 
+        def hget_all(self, hkey):
+            import collections
+            keys = self.hgetall(hkey)
+            mapping = collections.defaultdict(list)
+            for key in keys:
+                mapping[key] = keys.get(key)
+
+            return mapping
+
 except ImportError: pass
 
 def json_default(o):
