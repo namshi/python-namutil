@@ -349,6 +349,8 @@ def json_default(o):
         return o.isoformat()
     if type(o) is decimal.Decimal:
         return float(o)
+    if type(o) is bytearray:
+        return o.decode('utf8')
     return o
 
 def as_json(support_jsonp=False, sort_keys=False):
