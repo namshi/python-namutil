@@ -320,10 +320,10 @@ class SqlProxy(ObjProxy):
         for r in result:
             yield r[0]
 
-    def pk_map(self):
+    def pk_map(self, dict=dict):
         return dict(self.pk_map_iter())
 
-    def kv_map(self):
+    def kv_map(self, dict=dict):
         return dict(self.kv_map_iter())
 
     def dicts(self, dict=dict):
