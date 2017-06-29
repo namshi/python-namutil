@@ -281,6 +281,66 @@ def execute_sql(engine, query, engines={}, **kwargs):
     q = text(query.format(**kwargs))
     return engine.execute(q, params=kwargs) if is_session else engine.execute(q, **kwargs)
 
+def sql(*args, **kwargs):
+    return SqlProxy(execute_sql(*args, **kwargs))
+
+class ObjProxy(object):
+    def __init__(self, proxied):
+        self._proxied = proxied
+
+    def __iter__(self):
+        return self._proxied.__iter__()
+
+    def __getattr__(self, attr):
+        if attr in self.__dict__:
+            return getattr(self, attr)
+        return getattr(self._proxied, attr)
+
+class SqlProxy(ObjProxy):
+    def dicts_iter(self, dict=dict):
+        result = self._proxied
+        keys = result.keys()
+        for r in result:
+            yield dict((k, v) for k, v in zip(keys, r))
+
+    def pk_map_iter(self):
+        result = self._proxied
+        keys = result.keys()
+        for r in result:
+            yield (r[0], dict((k, v) for k, v in zip(keys, r)))
+
+    def kv_map_iter(self):
+        result = self._proxied
+        keys = result.keys()
+        for r in result:
+            yield (r[0], r[1])
+
+    def scalars_iter(self):
+        result = self._proxied
+        for r in result:
+            yield r[0]
+
+    def pk_map(self):
+        return dict(self.pk_map_iter())
+
+    def kv_map(self):
+        return dict(self.kv_map_iter())
+
+    def dicts(self, dict=dict):
+        return list(self.dicts_iter(dict=dict))
+
+    def scalars(self):
+        return list(self.scalars_iter())
+
+    def scalar_set(self):
+        return set(self.scalars_iter())
+
+    def dict(self):
+        try:
+            return self.dicts()[0]
+        except IndexError:
+            return None
+
 def get_results_as_dict(*args, **kwargs):
     return list(get_results_as_dict_iter(*args, **kwargs))
 
