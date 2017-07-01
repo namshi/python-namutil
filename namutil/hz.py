@@ -105,7 +105,7 @@ def read_google_doc(*args, **kwargs):
     return [dictc((sanitize(k), sanitize(v)) for k, v in zip(header, row) if is_valid_key(k)) for row in rows]
 
 class memoize(object):
-   def __init__(self, cache=None, expiry_time=0, num_args=None, locked=False):
+   def __init__(self, expiry_time=0, cache=None, num_args=None, locked=False):
        import threading
        self.cache = {} if cache is None else cache
        self.expiry_time = expiry_time
