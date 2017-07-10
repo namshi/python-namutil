@@ -335,9 +335,9 @@ class SqlProxy(ObjProxy):
     def scalar_set(self):
         return set(self.scalars_iter())
 
-    def dict(self):
+    def dict(self, dict=dict):
         try:
-            return self.dicts()[0]
+            return self.dicts(dict=dict)[0]
         except IndexError:
             return None
 
