@@ -129,10 +129,12 @@ class memoize(object):
                return wrapped(*args)
        return wrapped if self.lock is None else locked_wrapped
 
+CREATE_ENGINE_KWARGS = {'pool_recycle': 60}
+
 @memoize()
 def get_engine(e):
     from sqlalchemy import create_engine
-    return create_engine(e, pool_recycle=60)
+    return create_engine(e, **CREATE_ENGINE_KWARGS)
 
 def format_sql_list_param(strs):
     strs = [str(s) for s in strs]
