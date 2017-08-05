@@ -892,3 +892,27 @@ def signal_timeout(seconds, exception=TimeoutException):
     finally:
         signal.alarm(0)
 
+class ThreadedWorkers(object):
+    def __init__(self, logger=None):
+        self.workers = []
+        self.logger = logger or get_logger('workers')
+
+    def register(self, fn):
+        self.workers.append(fn)
+        return fn
+
+    def launch(self, target):
+        import threading
+        t = threading.Thread(target=target)
+        t.daemon = True
+        t.start()
+        self.logger.info('started worker {}'.format(target.__name__))
+        return t
+
+    def main(self):
+        import time
+        workers = {fn: self.launch(fn) for fn in self.workers}
+        while True:
+            workers = {fn: (thread if thread.isAlive() else self.launch(fn)) for fn, thread in workers.items()}
+            time.sleep(30)
+
