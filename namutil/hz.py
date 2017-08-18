@@ -305,7 +305,7 @@ class SqlProxy(ObjProxy):
         for r in result:
             yield dict((k, v) for k, v in zip(keys, r))
 
-    def pk_map_iter(self):
+    def pk_map_iter(self, dict=dict):
         result = self._proxied
         keys = result.keys()
         for r in result:
@@ -915,4 +915,21 @@ class ThreadedWorkers(object):
         while True:
             workers = {fn: (thread if thread.isAlive() else self.launch(fn)) for fn, thread in workers.items()}
             time.sleep(30)
+
+def make_jinjasql_prepare(callback=None):
+    from jinja2.utils import Markup
+    from jinjasql import JinjaSql
+    j = JinjaSql(param_style='named')
+    j.env.filters['inclause'] = lambda val: Markup(format_sql_list_param(val))
+    if callback: callback(j)
+    def jinjasql_prepare(template, **data):
+        return j.prepare_query(template, data)
+    return jinjasql_prepare
+
+jinjasql_prepare = None
+def jinjasql(session, template, **data):
+    global jinjasql_prepare
+    jinjasql_prepare = jinjasql_prepare or make_jinjasql_prepare()
+    query, params = jinjasql_prepare(template, **data)
+    return sql(session, query, **params)
 
