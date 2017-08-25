@@ -893,9 +893,10 @@ def signal_timeout(seconds, exception=TimeoutException):
         signal.alarm(0)
 
 class ThreadedWorkers(object):
-    def __init__(self, logger=None):
+    def __init__(self, logger=None, sleep=None):
         self.workers = []
         self.logger = logger or get_logger('workers')
+        self.sleep = sleep or 30
 
     def register(self, fn):
         self.workers.append(fn)
@@ -914,7 +915,7 @@ class ThreadedWorkers(object):
         workers = {fn: self.launch(fn) for fn in self.workers}
         while True:
             workers = {fn: (thread if thread.isAlive() else self.launch(fn)) for fn, thread in workers.items()}
-            time.sleep(30)
+            time.sleep(self.sleep)
 
 def make_jinjasql_prepare(callback=None):
     from jinja2.utils import Markup
