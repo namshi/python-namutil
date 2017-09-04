@@ -892,6 +892,7 @@ def signal_timeout(seconds, exception=TimeoutException):
     finally:
         signal.alarm(0)
 
+
 class ThreadedWorkers(object):
     def __init__(self, logger=None, sleep=None):
         self.workers = []
@@ -902,8 +903,20 @@ class ThreadedWorkers(object):
         self.workers.append(fn)
         return fn
 
-    def launch(self, target):
+    def get_target(self, fn):
+        import functools
+        @functools.wraps(fn)
+        def helper(*args, **kwargs):
+            try:
+                return fn(*args, **kwargs)
+            except Exception:
+                self.logger.exception('exception in worker {}'.format(fn.__name__))
+                raise
+        return helper
+
+    def launch(self, fn):
         import threading
+        target = self.get_target(fn)
         t = threading.Thread(target=target)
         t.daemon = True
         t.start()
