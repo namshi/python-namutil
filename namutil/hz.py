@@ -426,7 +426,10 @@ def as_json(support_jsonp=False, sort_keys=False):
             ret = fn(*args, **kwargs)
             status = 200
             if isinstance(ret, tuple):
-                status, ret = ret
+                if isinstance(ret[0], int):
+                    status, ret = ret
+                else:
+                    ret, status = ret
             if isinstance(ret, dict) or isinstance(ret, list):
                 content = json.dumps(ret, default=json_default, sort_keys=sort_keys)
                 callback = request.args.get('callback', False)
