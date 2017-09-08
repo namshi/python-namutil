@@ -950,3 +950,14 @@ def jinjasql(session, template, **data):
     query, params = jinjasql_prepare(template, **data)
     return sql(session, query, **params)
 
+def parse_tsv(tsv):
+    import csv
+    return list(csv.DictReader(tsv.splitlines(), dialect='excel-tab'))
+
+def set_readline(enabled):
+    import readline
+    if enabled:
+        readline.parse_and_bind('tab: complete')
+    else:
+        readline.parse_and_bind('tab: self-insert')
+
