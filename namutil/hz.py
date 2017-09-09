@@ -961,3 +961,7 @@ def set_readline(enabled):
     else:
         readline.parse_and_bind('tab: self-insert')
 
+def pluck(key, list_of_dicts):
+    from operator import itemgetter
+    return list(map(itemgetter(key), list_of_dicts))
+
