@@ -129,10 +129,10 @@ class memoize(object):
                return wrapped(*args)
        return wrapped if self.lock is None else locked_wrapped
 
-CREATE_ENGINE_KWARGS = {'pool_recycle': 60}
+CREATE_ENGINE_KWARGS = {'pool_recycle': 60, 'pool_size':20, 'max_overflow':30}
 
 @memoize()
-def get_engine(e):
+def get_engine(e, kwargs):
     from sqlalchemy import create_engine
     return create_engine(e, **CREATE_ENGINE_KWARGS)
 
@@ -964,4 +964,3 @@ def set_readline(enabled):
 def pluck(key, list_of_dicts):
     from operator import itemgetter
     return list(map(itemgetter(key), list_of_dicts))
-
