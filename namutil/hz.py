@@ -93,7 +93,7 @@ def read_google_doc(*args, **kwargs):
     except ImportError: import urllib2 as request
     export_url = get_google_doc_export_url(*args)
     resp = request.urlopen(export_url)
-    assert resp.headers['content-type'] == 'text/tab-separated-values', "bad content type '{}'; ensure that sheet is published: {}".format(resp.headers['content-type'], repr(args))
+    assert 'text/tab-separated-values' in resp.headers['content-type'], "bad content type '{}'; ensure that sheet is published: {}".format(resp.headers['content-type'], repr(args))
     data = resp.read().decode('utf8')
     header, rows = data.split("\n", 1)
     header = header.split("\t")
